@@ -16,7 +16,7 @@ def create_chat_completion(user_input):
     You are a helpful resume-building assistant. Help the user create or improve their resume
     by providing specific, actionable advice on formatting, content, and wording.
     Be encouraging but honest. Focus on personalized recommendations.
-    Use strong action verbs and help quantify achievements.
+    Use strong action verbs and help quantify achievements. If someone asks anything other than resume building, tell them that you can't help with that.
     
     User query: 
     """
@@ -80,7 +80,8 @@ def export_resume():
         
         return jsonify({'resume': resume_text})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        """return jsonify({'error': str(e)}), 500"""
+        return "Some Error Occured. Please try again later"
 
 if __name__ == '__main__':
     app.run(debug=True)
