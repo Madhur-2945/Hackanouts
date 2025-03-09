@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Resume Builder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #343a40;
+            padding: 15px 0;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .main-container {
+            margin-top: 30px;
+            padding-bottom: 50px;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 15px 20px;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .resume-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .btn-new-resume {
+            margin-bottom: 30px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 50px 0;
+        }
+        .empty-state i {
+            font-size: 60px;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+        .welcome-message {
+            margin-bottom: 30px;
+        }
+        .resume-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .resume-actions a {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">Resume Builder</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container main-container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="welcome-message">
+            <h2>Welcome, {{ session.username }}!</h2>
+            <p>Manage your resumes and create new ones to boost your job search.</p>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Your Resumes</h3>
+            <a href="{{ url_for('new_resume') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i> Create New Resume
+            </a>
+        </div>
+
+        {% if resumes %}
+            <div class="row">
+                {% for resume in resumes %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">{{ resume.title }}</h5>
+                                {% if resume.score %}
+                                    <span class="badge bg-primary">Score: {{ resume.score }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                {% if resume.target_job %}
+                                    <p><strong>Target Job:</strong> {{ resume.target_job }}</p>
+                                {% endif %}
+                                <p><small class="text-muted">Last updated: {{ resume.updated_at }}</small></p>
+                                
+                                <div class="resume-actions">
+                                    <a href="{{ url_for('view_resume', resume_id=resume.id) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-2"></i> View
+                                    </a>
+                                    <a href="{{ url_for('edit_resume', resume_id=resume.id) }}" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-edit me-2"></i> Edit
+                                    </a>
+                                </div>
+                                <div class="resume-actions mt-2">
+                                    <a href="{{ url_for('resume_chat', resume_id=resume.id) }}" class="btn btn-outline-info btn-sm">
+                                        <i class="fas fa-comments me-2"></i> AI Chat
+                                    </a>
+                                    <a href="{{ url_for('analyze_resume', resume_id=resume.id) }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-chart-bar me-2"></i> Analyze
+                                    </a>
+                                </div>
+                                <div class="resume-actions mt-2">
+                                    <a href="{{ url_for('export_resume', resume_id=resume.id) }}" class="btn btn-outline-dark btn-sm">
+                                        <i class="fas fa-download me-2"></i> Export
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-file-alt mb-3"></i>
+                <h4>No resumes yet</h4>
+                <p>Create your first resume to get started</p>
+                <a href="{{ url_for('new_resume') }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-plus me-2"></i> Create New Resume
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Resume Analysis{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h2>Resume Analysis: {{ resume.title }}</h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Analysis Summary</h3>
+                <div class="alert alert-info">
+                    <p>Overall Score: <strong>{{ analysis.score|default('N/A') }}</strong>/10</p>
+                    <p>{{ analysis.summary|default('No summary available') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Strengths</h3>
+                <ul class="list-group">
+                    {% if analysis.strengths %}
+                        {% for strength in analysis.strengths %}
+                            <li class="list-group-item list-group-item-success">{{ strength }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="list-group-item">No strengths identified</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Areas for Improvement</h3>
+                <ul class="list-group">
+                    {% if analysis.improvements %}
+                        {% for improvement in analysis.improvements %}
+                            <li class="list-group-item list-group-item-warning">{{ improvement }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="list-group-item">No areas for improvement identified</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Section Feedback</h3>
+                <div class="accordion" id="sectionFeedback">
+                    {% for section in sections %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{ loop.index }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+                                {{ section.title }}
+                            </button>
+                        </h2>
+                        <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#sectionFeedback">
+                            <div class="accordion-body">
+                                {% if analysis.section_feedback and section.title in analysis.section_feedback %}
+                                    {{ analysis.section_feedback[section.title]|safe }}
+                                {% else %}
+                                    <p>No feedback available for this section.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Recommendations</h3>
+                <div class="p-3 bg-light rounded">
+                    {% if analysis.recommendations %}
+                        {{ analysis.recommendations|safe }}
+                    {% else %}
+                        <p>No recommendations available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Chat with AI about your resume</h3>
+                <div class="card">
+                    <div class="card-body">
+                        <div id="chat-messages" class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                            <div class="d-flex flex-column chat-container">
+                                <div class="message system-message">
+                                    Hello! I'm your resume assistant. Ask me anything about your resume or how to improve it.
+                                </div>
+                            </div>
+                        </div>
+                        <form id="chat-form" class="d-flex">
+                            <input type="hidden" id="resume_id" value="{{ resume.id }}">
+                            <input type="text" id="user-message" class="form-control me-2" placeholder="Type your question...">
+                            <button type="submit" class="btn btn-primary">Send</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('chat-form');
+    const chatMessages = document.getElementById('chat-messages');
+    const userMessageInput = document.getElementById('user-message');
+    const resumeId = document.getElementById('resume_id').value;
+
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const userMessage = userMessageInput.value.trim();
+        if (!userMessage) return;
+
+        // Add user message to chat
+        addMessage(userMessage, 'user-message');
+        
+        // Clear input
+        userMessageInput.value = '';
+        
+        // Show loading indicator
+        addMessage('Thinking...', 'system-message loading');
+        
+        // Send to backend
+        fetch('/chat_with_resume/' + resumeId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: userMessage }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove loading message
+            const loadingEl = chatMessages.querySelector('.loading');
+            if (loadingEl) loadingEl.remove();
+            
+            // Add AI response
+            addMessage(data.response, 'system-message');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const loadingEl = chatMessages.querySelector('.loading');
+            if (loadingEl) loadingEl.remove();
+            addMessage('Sorry, there was an error processing your request.', 'system-message error');
+        });
+    });
+
+    function addMessage(message, className) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${className}`;
+        messageDiv.textContent = message;
+        
+        const container = chatMessages.querySelector('.chat-container');
+        container.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+});
+</script>
+{% endblock %}

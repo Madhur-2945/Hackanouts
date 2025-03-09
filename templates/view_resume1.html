@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}View Resume{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2>{{ resume.title }}</h2>
+        <div>
+            <a href="{{ url_for('edit_resume', resume_id=resume.id) }}" class="btn btn-primary">Edit</a>
+            <a href="{{ url_for('download_resume', resume_id=resume.id) }}" class="btn btn-success">Download</a>
+            <a href="{{ url_for('analyze_resume', resume_id=resume.id) }}" class="btn btn-info">Analyze</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Personal Information</h3>
+                <table class="table">
+                    <tr>
+                        <th width="150">Name</th>
+                        <td>{{ resume.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ resume.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Phone</th>
+                        <td>{{ resume.phone }}</td>
+                    </tr>
+                    <tr>
+                        <th>Location</th>
+                        <td>{{ resume.location }}</td>
+                    </tr>
+                    {% if resume.website %}
+                    <tr>
+                        <th>Website</th>
+                        <td>{{ resume.website }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if resume.linkedin %}
+                    <tr>
+                        <th>LinkedIn</th>
+                        <td>{{ resume.linkedin }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Professional Summary</h3>
+                <div class="p-3 bg-light rounded">
+                    {{ resume.summary|safe }}
+                </div>
+            </div>
+        </div>
+
+        {% for section in sections %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>{{ section.title }}</h3>
+                <div class="p-3 bg-light rounded">
+                    {{ section.content|safe }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Templates</h3>
+                <div class="list-group">
+                    {% for template in templates %}
+                    <a href="{{ url_for('apply_template', resume_id=resume.id, template_id=template.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        {{ template.name }}
+                        <span class="badge bg-primary rounded-pill">Apply</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Export Resume - {{ resume['title'] }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1>Export Resume: {{ resume['title'] }}</h1>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Export Options</h5>
+                    <form method="post" action="{{ url_for('export_resume', resume_id=resume['id']) }}">
+                        <div class="mb-3">
+                            <label for="format_type" class="form-label">Export Format</label>
+                            <select class="form-select" id="format_type" name="format_type" required>
+                                <option value="pdf">PDF Document</option>
+                                <option value="docx">Word Document (DOCX)</option>
+                                <option value="html">HTML Preview</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="template_id" class="form-label">Template</label>
+                            <select class="form-select" id="template_id" name="template_id">
+                                {% for template in templates %}
+                                <option value="{{ template['id'] }}">{{ template['name'] }} - {{ template['description'] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <button type="submit" class="btn btn-primary">Generate Resume</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Template Preview</h5>
+                    <div id="template-preview">
+                        <p class="text-center">Select a template to see a preview</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Resume Content</h5>
+                    <div class="resume-content">
+                        {% for section in sections %}
+                            {% if section['content'].strip() %}
+                                <div class="section mb-3">
+                                    <h4>{{ section['section_name'] }}</h4>
+                                    <div class="section-content">{{ section['content'] | nl2br }}</div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{{ url_for('view_resume', resume_id=resume['id']) }}" class="btn btn-secondary">Back to Resume</a>
+        <a href="{{ url_for('edit_resume', resume_id=resume['id']) }}" class="btn btn-primary">Edit Resume</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const templateSelect = document.getElementById('template_id');
+        const previewDiv = document.getElementById('template-preview');
+        
+        // Template preview samples (simplified for demonstration)
+        const templatePreviews = {
+            "1": `<div class="preview-box professional">
+                    <h3>Professional Template</h3>
+                    <div class="preview-content">
+                        <h1 style="color: #2c3e50;">Name</h1>
+                        <p>email@example.com • (555) 123-4567</p>
+                        <h2 style="color: #3498db; border-bottom: 1px solid #e0e0e0;">Experience</h2>
+                        <p>Clean, professional layout with blue accents</p>
+                    </div>
+                </div>`,
+            "2": `<div class="preview-box modern">
+                    <h3>Modern Template</h3>
+                    <div class="preview-content">
+                        <h1 style="color: #16a085;">Name</h1>
+                        <p>email@example.com • (555) 123-4567</p>
+                        <h2 style="color: #2980b9;">Experience</h2>
+                        <p>Contemporary design with teal highlights</p>
+                    </div>
+                </div>`,
+            "3": `<div class="preview-box minimalist">
+                    <h3>Minimalist Template</h3>
+                    <div class="preview-content">
+                        <h1 style="font-weight: normal;">Name</h1>
+                        <p>email@example.com • (555) 123-4567</p>
+                        <h2 style="font-weight: normal; color: #555;">Experience</h2>
+                        <p>Simple and elegant with focus on content</p>
+                    </div>
+                </div>`
+        };
+        
+        // Function to update preview when template is selected
+        function updatePreview() {
+            const selectedTemplate = templateSelect.value;
+            previewDiv.innerHTML = templatePreviews[selectedTemplate] || 'Preview not available';
+        }
+        
+        templateSelect.addEventListener('change', updatePreview);
+        
+        // Initialize with selected template
+        updatePreview();
+    });
+</script>
+{% endblock %}
