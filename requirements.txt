@@ -1,0 +1,15 @@
+Flask
+requests
+json
+sqlite3
+os
+re
+functools
+werkzeug
+uuid
+datetime
+textstat
+nltk
+docx2pdf
+pdfkit
+python-docx
