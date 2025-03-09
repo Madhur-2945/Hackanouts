@@ -505,7 +505,7 @@ def edit_resume(resume_id):
     if request.method == 'POST':
         # Update resume title and target job
         title = request.form['title']
-        target_job = request.form['target_job'] if 'target_job' in request.form else ''
+        target_job = request.form.get('target_job', '')
         
         cursor.execute(
             'UPDATE resumes SET title = ?, target_job = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', 
@@ -521,13 +521,14 @@ def edit_resume(resume_id):
             )
         
         # Compile full content for scoring
-        full_content = ""
-        for section in sections:
-            section_content = request.form.get(f'section_{section["id"]}', '')
-            full_content += section_content + "\n\n"
+        full_content = "\n\n".join(request.form.get(f'section_{section["id"]}', '') for section in sections)
         
         # Score resume
         score_result = score_resume(full_content, target_job)
+
+        # Ensure `score_result` is a dictionary
+        if isinstance(score_result, int):
+            score_result = {"score": score_result}  # Convert to dictionary
         
         # Update resume content and score
         cursor.execute(
@@ -991,12 +992,21 @@ def export_resume(resume_id):
     cursor.execute('SELECT * FROM templates')
     templates = cursor.fetchall()
     
-    if request.method == 'POST':
-        format_type = request.form['format_type']
-        template_id = request.form.get('template_id', 1)
-        
-        # Check if this is a preview request
-        is_preview = request.form.get('preview', 'false') == 'true'
+    # Check if this is a GET request with format_type parameter (for iframe direct loading)
+    is_preview = False
+    format_type = None
+    template_id = 1  # Default template
+    
+    if request.method == 'GET' and 'format_type' in request.args:
+        format_type = request.args.get('format_type')
+        template_id = request.args.get('template_id', 1)
+        is_preview = request.args.get('preview', 'false') == 'true'
+    
+    if request.method == 'POST' or format_type:
+        if not format_type:  # If not set from GET params
+            format_type = request.form['format_type']
+            template_id = request.form.get('template_id', 1)
+            is_preview = request.form.get('preview', 'false') == 'true'
         
         # Get selected template
         cursor.execute('SELECT * FROM templates WHERE id = ?', (template_id,))
@@ -1050,54 +1060,66 @@ def export_resume(resume_id):
         """
         
         if format_type == 'pdf':
-            try:                
-                # Create a new Document
-                doc = Document()
+            try:
+                # Import required modules here to ensure COM initialization happens correctly
+                import pythoncom
                 
-                # Add name as title
-                doc.add_heading(name, 0)
+                # Initialize COM for this thread - this fixes the CoInitialize error
+                pythoncom.CoInitialize()
                 
-                # Add contact info
-                doc.add_paragraph(contact)
-                
-                # Add sections
-                for section in sections:
-                    if section['content'].strip():
-                        doc.add_heading(section['section_name'], 1)
-                        doc.add_paragraph(section['content'])
-                
-                # Create temporary files for the conversion process
-                with tempfile.TemporaryDirectory() as temp_dir:
-                    # Create temporary file paths
-                    docx_path = os.path.join(temp_dir, f"{resume['title']}.docx")
-                    pdf_path = os.path.join(temp_dir, f"{resume['title']}.pdf")
+                try:
+                    # Create a new Document
+                    doc = Document()
                     
-                    # Save the DOCX to the temporary location
-                    doc.save(docx_path)
+                    # Add name as title
+                    doc.add_heading(name, 0)
                     
-                    # Convert DOCX to PDF
-                    convert(docx_path, pdf_path)
+                    # Add contact info
+                    doc.add_paragraph(contact)
                     
-                    # Read the PDF file
-                    with open(pdf_path, 'rb') as pdf_file:
-                        pdf_content = pdf_file.read()
+                    # Add sections
+                    for section in sections:
+                        if section['content'].strip():
+                            doc.add_heading(section['section_name'], 1)
+                            doc.add_paragraph(section['content'])
                     
-                    # Return the PDF file as a response
-                    response = make_response(pdf_content)
-                    response.headers['Content-Type'] = 'application/pdf'
-                    
-                    # Set Content-Disposition based on whether this is a preview or download
-                    if is_preview:
-                        # For preview, use 'inline' to display in browser
-                        response.headers['Content-Disposition'] = f'inline; filename={resume["title"]}.pdf'
-                    else:
-                        # For download, use 'attachment' to prompt download
-                        response.headers['Content-Disposition'] = f'attachment; filename={resume["title"]}.pdf'
-                    
-                    conn.close()
-                    return response
+                    # Create temporary files for the conversion process
+                    with tempfile.TemporaryDirectory() as temp_dir:
+                        # Create temporary file paths
+                        docx_path = os.path.join(temp_dir, f"{resume['title']}.docx")
+                        pdf_path = os.path.join(temp_dir, f"{resume['title']}.pdf")
+                        
+                        # Save the DOCX to the temporary location
+                        doc.save(docx_path)
+                        
+                        # Convert DOCX to PDF
+                        convert(docx_path, pdf_path)
+                        
+                        # Read the PDF file
+                        with open(pdf_path, 'rb') as pdf_file:
+                            pdf_content = pdf_file.read()
+                        
+                        # Return the PDF file as a response
+                        response = make_response(pdf_content)
+                        response.headers['Content-Type'] = 'application/pdf'
+                        
+                        # Set Content-Disposition based on whether this is a preview or download
+                        if is_preview:
+                            # For preview, use 'inline' to display in browser
+                            response.headers['Content-Disposition'] = f'inline; filename={resume["title"]}.pdf'
+                        else:
+                            # For download, use 'attachment' to prompt download
+                            response.headers['Content-Disposition'] = f'attachment; filename={resume["title"]}.pdf'
+                        
+                        conn.close()
+                        return response
+                finally:
+                    # Always uninitialize COM when done, even if an exception occurred
+                    pythoncom.CoUninitialize()
+                        
             except Exception as e:
                 flash(f'Error generating PDF: {str(e)}')
+                conn.close()
                 return redirect(url_for('export_resume', resume_id=resume_id))
                         
         elif format_type == 'docx':
@@ -1130,6 +1152,7 @@ def export_resume(resume_id):
                 return response
             except Exception as e:
                 flash(f'Error generating DOCX: {str(e)}')
+                conn.close()
                 return redirect(url_for('export_resume', resume_id=resume_id))
                 
         else:
@@ -1137,6 +1160,7 @@ def export_resume(resume_id):
             conn.close()
             return render_template('preview_resume.html', resume=resume, html_content=full_html)
     
+    # If we get here, it's a GET request without format_type, so show the export options page
     conn.close()
     return render_template('export_resume.html', resume=resume, templates=templates)
     
