@@ -15,8 +15,8 @@ from docx import Document
 import pdfkit
 from io import BytesIO
 import base64
-
-import pdfkit
+from docx2pdf import convert
+import tempfile
 
 
 # Download NLTK resources
@@ -707,6 +707,9 @@ def export_resume(resume_id):
         format_type = request.form['format_type']
         template_id = request.form.get('template_id', 1)
         
+        # Check if this is a preview request
+        is_preview = request.form.get('preview', 'false') == 'true'
+        
         # Get selected template
         cursor.execute('SELECT * FROM templates WHERE id = ?', (template_id,))
         template = cursor.fetchone()
@@ -759,22 +762,55 @@ def export_resume(resume_id):
         """
         
         if format_type == 'pdf':
-            try:
-                config = pdfkit.configuration(wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe")
+            try:                
+                # Create a new Document
+                doc = Document()
                 
-                # ✅ Pass `config` to `pdfkit.from_string`
-                pdf = pdfkit.from_string(full_html, False, configuration=config)
+                # Add name as title
+                doc.add_heading(name, 0)
                 
-                response = make_response(pdf)
-                response.headers['Content-Type'] = 'application/pdf'
-                response.headers['Content-Disposition'] = f'attachment; filename={resume["title"]}.pdf'
+                # Add contact info
+                doc.add_paragraph(contact)
                 
-                conn.close()
-                return response
+                # Add sections
+                for section in sections:
+                    if section['content'].strip():
+                        doc.add_heading(section['section_name'], 1)
+                        doc.add_paragraph(section['content'])
+                
+                # Create temporary files for the conversion process
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    # Create temporary file paths
+                    docx_path = os.path.join(temp_dir, f"{resume['title']}.docx")
+                    pdf_path = os.path.join(temp_dir, f"{resume['title']}.pdf")
+                    
+                    # Save the DOCX to the temporary location
+                    doc.save(docx_path)
+                    
+                    # Convert DOCX to PDF
+                    convert(docx_path, pdf_path)
+                    
+                    # Read the PDF file
+                    with open(pdf_path, 'rb') as pdf_file:
+                        pdf_content = pdf_file.read()
+                    
+                    # Return the PDF file as a response
+                    response = make_response(pdf_content)
+                    response.headers['Content-Type'] = 'application/pdf'
+                    
+                    # Set Content-Disposition based on whether this is a preview or download
+                    if is_preview:
+                        # For preview, use 'inline' to display in browser
+                        response.headers['Content-Disposition'] = f'inline; filename={resume["title"]}.pdf'
+                    else:
+                        # For download, use 'attachment' to prompt download
+                        response.headers['Content-Disposition'] = f'attachment; filename={resume["title"]}.pdf'
+                    
+                    conn.close()
+                    return response
             except Exception as e:
                 flash(f'Error generating PDF: {str(e)}')
                 return redirect(url_for('export_resume', resume_id=resume_id))
-
                         
         elif format_type == 'docx':
             try:
@@ -815,7 +851,7 @@ def export_resume(resume_id):
     
     conn.close()
     return render_template('export_resume.html', resume=resume, templates=templates)
-
+    
 @app.route('/api/get_response', methods=['POST'])
 @login_required
 def api_get_response():

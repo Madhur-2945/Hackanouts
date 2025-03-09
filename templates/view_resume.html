@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}View Resume{% endblock %}
+{% block title %}Preview Resume{% endblock %}
 
 {% block content %}
 <div class="card">
@@ -26,64 +26,18 @@
                 </div>
             </div>
             <a href="{{ url_for('analyze_resume', resume_id=resume.id) }}" class="btn btn-info">Analyze</a>
+            <form method="post" action="{{ url_for('export_resume', resume_id=resume.id) }}" target="pdfPreview">
+                <input type="hidden" name="format_type" value="pdf">
+                <input type="hidden" name="preview" value="true">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn btn-outline-secondary">Refresh Preview</button>
+            </form>
         </div>
     </div>
     <div class="card-body">
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h3>Personal Information</h3>
-                <table class="table">
-                    <tr>
-                        <th width="150">Name</th>
-                        <td>{{ resume.name }}</td>
-                    </tr>
-                    <tr>
-                        <th>Email</th>
-                        <td>{{ resume.email }}</td>
-                    </tr>
-                    <tr>
-                        <th>Phone</th>
-                        <td>{{ resume.phone }}</td>
-                    </tr>
-                    <tr>
-                        <th>Location</th>
-                        <td>{{ resume.location }}</td>
-                    </tr>
-                    {% if resume.website %}
-                    <tr>
-                        <th>Website</th>
-                        <td>{{ resume.website }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if resume.linkedin %}
-                    <tr>
-                        <th>LinkedIn</th>
-                        <td>{{ resume.linkedin }}</td>
-                    </tr>
-                    {% endif %}
-                </table>
-            </div>
+        <div class="pdf-preview-container">
+            <iframe name="pdfPreview" id="pdfPreview" src="{{ url_for('export_resume', resume_id=resume.id) }}?format_type=pdf&preview=true" width="100%" height="800px" frameborder="0"></iframe>
         </div>
-
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h3>Professional Summary</h3>
-                <div class="p-3 bg-light rounded">
-                    {{ resume.summary|safe }}
-                </div>
-            </div>
-        </div>
-
-        {% for section in sections %}
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h3>{{ section.title }}</h3>
-                <div class="p-3 bg-light rounded">
-                    {{ section.content|safe }}
-                </div>
-            </div>
-        </div>
-        {% endfor %}
     </div>
 </div>
 
@@ -92,11 +46,27 @@
     margin-bottom: 5px; /* Add space below buttons */
 }
 
+.pdf-preview-container {
+    width: 100%;
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#pdfPreview {
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
 @media (max-width: 768px) {
     .card-header div {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+    }
+    
+    #pdfPreview {
+        height: 500px;
     }
 }
 </style>
@@ -107,6 +77,10 @@
         if (dropdownElement) {
             new bootstrap.Dropdown(dropdownElement);
         }
+        
+        // Load the PDF preview when the page loads
+        var iframe = document.getElementById('pdfPreview');
+        iframe.src = "{{ url_for('export_resume', resume_id=resume.id) }}?format_type=pdf&preview=true";
     });
 </script>
 {% endblock %}

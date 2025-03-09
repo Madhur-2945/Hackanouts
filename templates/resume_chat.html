@@ -1,258 +1,429 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Resume Chat - Resume Builder</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <!-- Add highlight.js for code syntax highlighting -->
+    <link 
+      rel="stylesheet" 
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css"
+    />
     <style>
-        body {
-            background-color: #f8f9fa;
-            padding-top: 20px;
-        }
-        .chat-container {
-            height: 70vh;
-            overflow-y: auto;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            background-color: white;
-            padding: 15px;
-        }
-        .message {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            border-radius: 18px;
-            max-width: 75%;
-            position: relative;
-        }
-        .user-message {
-            background-color: #007bff;
-            color: white;
-            margin-left: auto;
-            border-bottom-right-radius: 5px;
-        }
-        .assistant-message {
-            background-color: #f1f1f1;
-            color: #333;
-            margin-right: auto;
-            border-bottom-left-radius: 5px;
-        }
-        .input-container {
-            position: relative;
-            margin-top: 15px;
-        }
-        .send-button {
-            position: absolute;
-            right: 15px;
-            top: 8px;
-            background: none;
-            border: none;
-            color: #007bff;
-            cursor: pointer;
-        }
-        .resume-sections {
-            background-color: white;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            padding: 15px;
-        }
-        .resume-section-title {
-            font-weight: bold;
-            color: #495057;
-            cursor: pointer;
-        }
-        .resume-section-content {
-            font-size: 0.9rem;
-            color: #6c757d;
-            white-space: pre-line;
-            max-height: 100px;
-            overflow-y: auto;
-            border-left: 3px solid #e9ecef;
-            padding-left: 10px;
-            margin: 5px 0 10px 10px;
-        }
-        .section-badge {
-            font-size: 0.7rem;
-            padding: 0.25rem 0.5rem;
-            margin-left: 5px;
-        }
-        pre {
-            white-space: pre-wrap;
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        code {
-            color: #d63384;
-        }
+      body {
+        background-color: #f8f9fa;
+        padding-top: 20px;
+      }
+      .chat-container {
+        height: 70vh;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        background-color: white;
+        padding: 15px;
+      }
+      .message {
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        border-radius: 18px;
+        max-width: 75%;
+        position: relative;
+      }
+      .user-message {
+        background-color: #007bff;
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 5px;
+      }
+      .assistant-message {
+        background-color: #f1f1f1;
+        color: #333;
+        margin-right: auto;
+        border-bottom-left-radius: 5px;
+      }
+      .input-container {
+        position: relative;
+        margin-top: 15px;
+      }
+      .send-button {
+        position: absolute;
+        right: 15px;
+        top: 8px;
+        background: none;
+        border: none;
+        color: #007bff;
+        cursor: pointer;
+      }
+      .resume-sections {
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 15px;
+      }
+      .resume-section-title {
+        font-weight: bold;
+        color: #495057;
+        cursor: pointer;
+      }
+      .resume-section-content {
+        font-size: 0.9rem;
+        color: #6c757d;
+        white-space: pre-line;
+        max-height: 100px;
+        overflow-y: auto;
+        border-left: 3px solid #e9ecef;
+        padding-left: 10px;
+        margin: 5px 0 10px 10px;
+      }
+      .section-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        margin-left: 5px;
+      }
+      /* Enhanced code styling */
+      pre {
+        white-space: pre-wrap;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        position: relative;
+      }
+      code {
+        color: #333;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      }
+      .hljs {
+        background: #f8f9fa !important;
+        padding: 1em;
+        border-radius: 5px;
+      }
+      /* Styling for markdown elements */
+      .assistant-message h1, 
+      .assistant-message h2, 
+      .assistant-message h3 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+      .assistant-message ul, 
+      .assistant-message ol {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        padding-left: 2rem;
+      }
+      .assistant-message p {
+        margin-bottom: 0.75rem;
+      }
+      .assistant-message table {
+        border-collapse: collapse;
+        margin: 1rem 0;
+        width: 100%;
+      }
+      .assistant-message table, 
+      .assistant-message th, 
+      .assistant-message td {
+        border: 1px solid #dee2e6;
+        padding: 0.5rem;
+      }
+      .assistant-message th {
+        background-color: #f8f9fa;
+      }
+      .copy-button {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #f1f1f1;
+        border: none;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 12px;
+        cursor: pointer;
+        opacity: 0.8;
+      }
+      .copy-button:hover {
+        opacity: 1;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="row mb-4">
-            <div class="col-12">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ url_for('view_resume', resume_id=resume.id) }}">{{ resume.title }}</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">AI Chat</li>
-                    </ol>
-                </nav>
+      <div class="row mb-4">
+        <div class="col-12">
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+              </li>
+              <li class="breadcrumb-item">
+                <a href="{{ url_for('view_resume', resume_id=resume.id) }}"
+                  >{{ resume.title }}</a
+                >
+              </li>
+              <li class="breadcrumb-item active" aria-current="page">
+                AI Chat
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card mb-4">
+            <div
+              class="card-header d-flex justify-content-between align-items-center"
+            >
+              <h5 class="mb-0">
+                <i class="fas fa-robot me-2"></i> Resume Chat Assistant
+              </h5>
+              <span class="badge bg-primary">{{ resume.title }}</span>
             </div>
+            <div class="card-body">
+              <div class="chat-container mb-3" id="chatContainer">
+                {% for message in messages %}
+                <div
+                  class="message {% if message.role == 'user' %}user-message{% else %}assistant-message{% endif %}"
+                >
+                  {% if message.role == 'user' %}
+                    {{ message.content | safe }}
+                  {% else %}
+                    <div class="markdown-content">{{ message.content | safe }}</div>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+              <form method="POST" id="chatForm">
+                <div class="input-container">
+                  <input
+                    type="text"
+                    id="userInput"
+                    name="user_input"
+                    class="form-control"
+                    placeholder="Type your message here..."
+                    required
+                  />
+                  <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                  />
+                  <button type="submit" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </form>
+            </div>
+            <div class="card-footer text-muted small">
+              <i class="fas fa-info-circle me-1"></i> Ask for help with specific
+              sections or general resume advice.
+            </div>
+          </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-robot me-2"></i> Resume Chat Assistant
-                        </h5>
-                        <span class="badge bg-primary">{{ resume.title }}</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="chat-container mb-3" id="chatContainer">
-                            {% for message in messages %}
-                                <div class="message {% if message.role == 'user' %}user-message{% else %}assistant-message{% endif %}">
-                                    {{ message.content | safe }}
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <form method="POST" id="chatForm">
-                            <div class="input-container">
-                                <input type="text" id="userInput" name="user_input" class="form-control" placeholder="Type your message here..." required>
-                                <button type="submit" class="send-button">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="card-footer text-muted small">
-                        <i class="fas fa-info-circle me-1"></i> Ask for help with specific sections or general resume advice.
-                    </div>
-                </div>
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-file-alt me-2"></i> Resume Sections
+              </h5>
             </div>
-            
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-file-alt me-2"></i> Resume Sections
-                        </h5>
-                    </div>
-                    <div class="card-body resume-sections">
-                        {% for section in sections %}
-                            <div class="resume-section mb-3">
-                                <div class="resume-section-title" onclick="toggleSection('section-{{ section.id }}')">
-                                    <i class="fas fa-caret-right me-1" id="caret-section-{{ section.id }}"></i>
-                                    {{ section.section_name }}
-                                    {% if section.content|trim %}
-                                        <span class="badge bg-success section-badge">Completed</span>
-                                    {% else %}
-                                        <span class="badge bg-warning section-badge">Empty</span>
-                                    {% endif %}
-                                </div>
-                                <div class="resume-section-content" id="section-{{ section.id }}" style="display: none;">
-                                    {% if section.content|trim %}
-                                        {{ section.content }}
-                                    {% else %}
-                                        <em>No content yet. Ask the assistant for help with this section.</em>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <div class="card-footer">
-                        <div class="d-grid gap-2">
-                            <a href="{{ url_for('edit_resume', resume_id=resume.id) }}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-edit me-1"></i> Edit Resume
-                            </a>
-                            <a href="{{ url_for('analyze_resume', resume_id=resume.id) }}" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-chart-pie me-1"></i> Analyze Resume
-                            </a>
-                        </div>
-                    </div>
+            <div class="card-body resume-sections">
+              {% for section in sections %}
+              <div class="resume-section mb-3">
+                <div
+                  class="resume-section-title"
+                  onclick="toggleSection('section-{{ section.id }}')"
+                >
+                  <i
+                    class="fas fa-caret-right me-1"
+                    id="caret-section-{{ section.id }}"
+                  ></i>
+                  {{ section.section_name }} {% if section.content|trim %}
+                  <span class="badge bg-success section-badge">Completed</span>
+                  {% else %}
+                  <span class="badge bg-warning section-badge">Empty</span>
+                  {% endif %}
                 </div>
-                
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-lightbulb me-2"></i> Quick Prompts
-                        </h5>
-                    </div>
-                    <div class="card-body p-2">
-                        <div class="list-group">
-                            <button class="list-group-item list-group-item-action" onclick="insertPrompt('Help me improve my work experience section')">Improve work experience</button>
-                            <button class="list-group-item list-group-item-action" onclick="insertPrompt('What skills should I include for {{ resume.target_job }}?')">Suggest skills</button>
-                            <button class="list-group-item list-group-item-action" onclick="insertPrompt('Give me a template for my education section')">Education template</button>
-                            <button class="list-group-item list-group-item-action" onclick="insertPrompt('How can I make my resume stand out?')">Stand out tips</button>
-                            <button class="list-group-item list-group-item-action" onclick="insertPrompt('How to write a good personal summary')">Personal summary</button>
-                        </div>
-                    </div>
+                <div
+                  class="resume-section-content"
+                  id="section-{{ section.id }}"
+                  style="display: none"
+                >
+                  {% if section.content|trim %} {{ section.content }} {% else %}
+                  <em
+                    >No content yet. Ask the assistant for help with this
+                    section.</em
+                  >
+                  {% endif %}
                 </div>
+              </div>
+              {% endfor %}
             </div>
+            <div class="card-footer">
+              <div class="d-grid gap-2">
+                <a
+                  href="{{ url_for('edit_resume', resume_id=resume.id) }}"
+                  class="btn btn-outline-primary btn-sm"
+                >
+                  <i class="fas fa-edit me-1"></i> Edit Resume
+                </a>
+                <a
+                  href="{{ url_for('analyze_resume', resume_id=resume.id) }}"
+                  class="btn btn-outline-secondary btn-sm"
+                >
+                  <i class="fas fa-chart-pie me-1"></i> Analyze Resume
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-3">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-lightbulb me-2"></i> Quick Prompts
+              </h5>
+            </div>
+            <div class="card-body p-2">
+              <div class="list-group">
+                <button
+                  class="list-group-item list-group-item-action"
+                  onclick="insertPrompt('Help me improve my work experience section')"
+                >
+                  Improve work experience
+                </button>
+                <button
+                  class="list-group-item list-group-item-action"
+                  onclick="insertPrompt('What skills should I include for {{ resume.target_job }}?')"
+                >
+                  Suggest skills
+                </button>
+                <button
+                  class="list-group-item list-group-item-action"
+                  onclick="insertPrompt('Give me a template for my education section')"
+                >
+                  Education template
+                </button>
+                <button
+                  class="list-group-item list-group-item-action"
+                  onclick="insertPrompt('How can I make my resume stand out?')"
+                >
+                  Stand out tips
+                </button>
+                <button
+                  class="list-group-item list-group-item-action"
+                  onclick="insertPrompt('How to write a good personal summary')"
+                >
+                  Personal summary
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
+    <!-- Add required JS libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.2.12/marked.min.js"></script>
     <script>
-        // Scroll to bottom of chat on load
-        document.addEventListener('DOMContentLoaded', function() {
-            const chatContainer = document.getElementById('chatContainer');
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            // Add loading indicator to form
-            const form = document.getElementById('chatForm');
-            form.addEventListener('submit', function() {
-                const button = this.querySelector('button[type="submit"]');
-                const icon = button.querySelector('i');
-                icon.className = 'fas fa-spinner fa-spin';
-                button.disabled = true;
-            });
+      // Scroll to bottom of chat on load
+      document.addEventListener("DOMContentLoaded", function () {
+        const chatContainer = document.getElementById("chatContainer");
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        // Add loading indicator to form
+        const form = document.getElementById("chatForm");
+        form.addEventListener("submit", function () {
+          const button = this.querySelector('button[type="submit"]');
+          const icon = button.querySelector("i");
+          icon.className = "fas fa-spinner fa-spin";
+          button.disabled = true;
         });
         
-        // Function to toggle section visibility
-        function toggleSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            const caret = document.getElementById('caret-' + sectionId);
-            
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
-                caret.className = 'fas fa-caret-down me-1';
-            } else {
-                section.style.display = 'none';
-                caret.className = 'fas fa-caret-right me-1';
-            }
+        // Parse and render markdown in assistant messages
+        renderMarkdown();
+      });
+
+      // Function to toggle section visibility
+      function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        const caret = document.getElementById("caret-" + sectionId);
+
+        if (section.style.display === "none") {
+          section.style.display = "block";
+          caret.className = "fas fa-caret-down me-1";
+        } else {
+          section.style.display = "none";
+          caret.className = "fas fa-caret-right me-1";
         }
+      }
+
+      // Function to insert quick prompts
+      function insertPrompt(text) {
+        const input = document.getElementById("userInput");
+        input.value = text;
+        input.focus();
+      }
+
+      // Configure marked.js options
+      marked.setOptions({
+        highlight: function(code, lang) {
+          if (lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value;
+          } else {
+            return hljs.highlightAuto(code).value;
+          }
+        },
+        breaks: true,
+        gfm: true
+      });
+
+      // Function to render markdown in assistant messages
+      function renderMarkdown() {
+        const markdownContents = document.querySelectorAll('.markdown-content');
         
-        // Function to insert quick prompts
-        function insertPrompt(text) {
-            const input = document.getElementById('userInput');
-            input.value = text;
-            input.focus();
-        }
-        
-        // Function to parse code blocks in AI responses
-        function parseCodeBlocks() {
-            const assistantMessages = document.querySelectorAll('.assistant-message');
-            
-            assistantMessages.forEach(message => {
-                let content = message.innerHTML;
-                
-                // Replace ```language ... ``` with <pre><code>...</code></pre>
-                content = content.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-                
-                // Replace single backticks with <code> tags
-                content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
-                
-                message.innerHTML = content;
-            });
-        }
-        
-        // Parse code blocks on load
-        document.addEventListener('DOMContentLoaded', parseCodeBlocks);
+        markdownContents.forEach(content => {
+          // Get raw content
+          let rawContent = content.textContent || content.innerText;
+          
+          // Render markdown
+          const renderedHtml = marked.parse(rawContent);
+          content.innerHTML = renderedHtml;
+          
+          // Add copy buttons to code blocks
+          const codeBlocks = content.querySelectorAll('pre code');
+          codeBlocks.forEach((codeBlock, index) => {
+            const pre = codeBlock.parentNode;
+            const copyButton = document.createElement('button');
+            copyButton.className = 'copy-button';
+            copyButton.textContent = 'Copy';
+            copyButton.onclick = function() {
+              const code = codeBlock.textContent;
+              navigator.clipboard.writeText(code).then(() => {
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                  copyButton.textContent = 'Copy';
+                }, 2000);
+              });
+            };
+            pre.style.position = 'relative';
+            pre.appendChild(copyButton);
+          });
+          
+          // Apply syntax highlighting
+          hljs.highlightAll();
+        });
+      }
     </script>
-</body>
+  </body>
 </html>

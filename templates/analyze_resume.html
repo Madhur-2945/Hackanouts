@@ -90,88 +90,13 @@
 
         <div class="row mb-4">
             <div class="col-md-12">
-                <h3>Chat with AI about your resume</h3>
-                <div class="card">
-                    <div class="card-body">
-                        <div id="chat-messages" class="mb-3" style="max-height: 300px; overflow-y: auto;">
-                            <div class="d-flex flex-column chat-container">
-                                <div class="message system-message">
-                                    Hello! I'm your resume assistant. Ask me anything about your resume or how to improve it.
-                                </div>
-                            </div>
-                        </div>
-                        <form id="chat-form" class="d-flex">
-                            <input type="hidden" id="resume_id" value="{{ resume.id }}">
-                            <input type="text" id="user-message" class="form-control me-2" placeholder="Type your question...">
-                            <button type="submit" class="btn btn-primary">Send</button>
-                        </form>
-                    </div>
+                <h3>Get AI Assistance</h3>
+                <div class="text-center">
+                    <p>Chat with our AI assistant to get personalized advice about your resume.</p>
+                    <a href="{{ url_for('resume_chat', resume_id=resume.id) }}" class="btn btn-primary">Chat About Your Resume</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const chatForm = document.getElementById('chat-form');
-    const chatMessages = document.getElementById('chat-messages');
-    const userMessageInput = document.getElementById('user-message');
-    const resumeId = document.getElementById('resume_id').value;
-
-    chatForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const userMessage = userMessageInput.value.trim();
-        if (!userMessage) return;
-
-        // Add user message to chat
-        addMessage(userMessage, 'user-message');
-        
-        // Clear input
-        userMessageInput.value = '';
-        
-        // Show loading indicator
-        addMessage('Thinking...', 'system-message loading');
-        
-        // Send to backend
-        fetch('/chat_with_resume/' + resumeId, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message: userMessage }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Remove loading message
-            const loadingEl = chatMessages.querySelector('.loading');
-            if (loadingEl) loadingEl.remove();
-            
-            // Add AI response
-            addMessage(data.response, 'system-message');
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            const loadingEl = chatMessages.querySelector('.loading');
-            if (loadingEl) loadingEl.remove();
-            addMessage('Sorry, there was an error processing your request.', 'system-message error');
-        });
-    });
-
-    function addMessage(message, className) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${className}`;
-        messageDiv.textContent = message;
-        
-        const container = chatMessages.querySelector('.chat-container');
-        container.appendChild(messageDiv);
-        
-        // Scroll to bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-});
-</script>
 {% endblock %}
