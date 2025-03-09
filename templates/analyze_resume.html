@@ -1,102 +1,247 @@
-{% extends 'base.html' %}
-
-{% block title %}Resume Analysis{% endblock %}
-
-{% block content %}
-<div class="card mb-4">
-    <div class="card-header">
-        <h2>Resume Analysis: {{ resume.title }}</h2>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
-    </div>
-    <div class="card-body">
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h3>Analysis Summary</h3>
-                <div class="alert alert-info">
-                    <p>Overall Score: <strong>{{ analysis.score|default('N/A') }}</strong>/10</p>
-                    <p>{{ analysis.summary|default('No summary available') }}</p>
-                </div>
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Analysis: {{ resume.title }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+        }
+        .container {
+            max-width: 900px;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .analysis-summary {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .score-box {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .score-details {
+            margin-top: 15px;
+        }
+        .score-details ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .score-details li {
+            padding: 5px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .card {
+            margin-bottom: 15px;
+        }
+        .section-feedback-item {
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .section-header {
+            padding: 10px 15px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+        }
+        .section-header h5 {
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-content {
+            padding: 15px;
+        }
+        .list-group-item {
+            border-left: none;
+            border-right: none;
+        }
+        .list-group-item:first-child {
+            border-top: none;
+        }
+        .list-group-item:last-child {
+            border-bottom: none;
+        }
+        .btn-primary {
+            background-color: #007bff;
+        }
+        .empty-message {
+            font-style: italic;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Resume Analysis: {{ resume.title }}</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
 
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h3>Strengths</h3>
-                <ul class="list-group">
-                    {% if analysis.strengths %}
-                        {% for strength in analysis.strengths %}
-                            <li class="list-group-item list-group-item-success">{{ strength }}</li>
-                        {% endfor %}
-                    {% else %}
-                        <li class="list-group-item">No strengths identified</li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h3>Areas for Improvement</h3>
-                <ul class="list-group">
-                    {% if analysis.improvements %}
-                        {% for improvement in analysis.improvements %}
-                            <li class="list-group-item list-group-item-warning">{{ improvement }}</li>
-                        {% endfor %}
-                    {% else %}
-                        <li class="list-group-item">No areas for improvement identified</li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h3>Section Feedback</h3>
-                <div class="accordion" id="sectionFeedback">
-                    {% for section in sections %}
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="heading{{ loop.index }}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
-                                {{ section.title }}
-                            </button>
-                        </h2>
-                        <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#sectionFeedback">
-                            <div class="accordion-body">
-                                {% if analysis.section_feedback and section.title in analysis.section_feedback %}
-                                    {{ analysis.section_feedback[section.title]|safe }}
-                                {% else %}
-                                    <p>No feedback available for this section.</p>
-                                {% endif %}
+        <div class="section">
+            <h3 class="section-title">Analysis Summary</h3>
+            {% if analysis %}
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="score-box">
+                            <div>Overall Score</div>
+                            <div class="display-4">{{ analysis.score }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="analysis-summary">
+                            <div class="score-details">
+                                <ul>
+                                    {% if analysis.length %}
+                                        <li><strong>Length:</strong> {{ analysis.length }}</li>
+                                    {% endif %}
+                                    {% if analysis.readability %}
+                                        <li><strong>Readability:</strong> {{ analysis.readability }}</li>
+                                    {% endif %}
+                                    {% if analysis.action_verbs %}
+                                        <li><strong>Action Verbs:</strong> {{ analysis.action_verbs }}</li>
+                                    {% endif %}
+                                    {% if analysis.bullet_points %}
+                                        <li><strong>Bullet Points:</strong> {{ analysis.bullet_points }}</li>
+                                    {% endif %}
+                                </ul>
                             </div>
                         </div>
                     </div>
+                </div>
+            {% else %}
+                <p class="empty-message">No summary available</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">Strengths</h3>
+            {% if analysis.strengths %}
+                <ul class="list-group">
+                    {% for strength in analysis.strengths %}
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success mr-2"></i> {{ strength }}
+                        </li>
                     {% endfor %}
-                </div>
-            </div>
+                </ul>
+            {% else %}
+                <p class="empty-message">No strengths identified</p>
+            {% endif %}
         </div>
 
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h3>Recommendations</h3>
-                <div class="p-3 bg-light rounded">
-                    {% if analysis.recommendations %}
-                        {{ analysis.recommendations|safe }}
-                    {% else %}
-                        <p>No recommendations available.</p>
-                    {% endif %}
-                </div>
-            </div>
+        <div class="section">
+            <h3 class="section-title">Areas for Improvement</h3>
+            {% if analysis.areas_for_improvement %}
+                <ul class="list-group">
+                    {% for area in analysis.areas_for_improvement %}
+                        <li class="list-group-item">
+                            <i class="fas fa-exclamation-circle text-warning mr-2"></i> {{ area }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="empty-message">No areas for improvement identified</p>
+            {% endif %}
         </div>
 
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h3>Get AI Assistance</h3>
-                <div class="text-center">
-                    <p>Chat with our AI assistant to get personalized advice about your resume.</p>
-                    <a href="{{ url_for('resume_chat', resume_id=resume.id) }}" class="btn btn-primary">Chat About Your Resume</a>
+        <div class="section">
+            <h3 class="section-title">Section Feedback</h3>
+            {% if analysis.section_feedback %}
+                {% for section_id, feedback in analysis.section_feedback.items() %}
+                    <div class="section-feedback-item">
+                        <div class="section-header" data-toggle="collapse" data-target="#section-{{ section_id }}">
+                            <h5>
+                                {{ feedback.title }} 
+                                <i class="fas fa-chevron-down"></i>
+                            </h5>
+                        </div>
+                        <div id="section-{{ section_id }}" class="collapse section-content">
+                            {% if feedback.feedback %}
+                                <ul class="list-unstyled">
+                                    {% for item in feedback.feedback %}
+                                        <li class="mb-2">
+                                            <i class="fas fa-info-circle text-info mr-2"></i> {{ item }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="empty-message">No feedback available for this section.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty-message">No section feedback available</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">Recommendations</h3>
+            {% if analysis.recommendations %}
+                <div class="card">
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            {% for recommendation in analysis.recommendations %}
+                                <li class="mb-3">
+                                    <i class="fas fa-lightbulb text-warning mr-2"></i> {{ recommendation }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% else %}
+                <p class="empty-message">No recommendations available.</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">Get AI Assistance</h3>
+            <div class="card">
+                <div class="card-body text-center">
+                    <p class="card-text">Chat with our AI assistant to get personalized advice about your resume.</p>
+                    <a href="#" class="btn btn-primary">Chat About Your Resume</a>
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <footer class="text-center mb-4">
+        <p class="text-muted">© 2025 Resume Chatbot</p>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

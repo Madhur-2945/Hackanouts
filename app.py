@@ -667,9 +667,18 @@ def analyze_resume(resume_id):
         content = resume['content']
         job_description = request.form.get('job_description', '')
         
-        # Perform analyses
+        # Basic analyses
         analysis['score'] = score_resume(content, resume['target_job'])
-        analysis['sentiment'] = analyze_sentiment(content)
+        analysis['length'] = f"{len(content.split())} words"
+        analysis['readability'] = check_readability(content)
+        analysis['action_verbs'] = f"Used {count_action_verbs(content)} action verbs"
+        analysis['bullet_points'] = f"Contains {content.count('•')} bullet points"
+        
+        # Additional analyses
+        analysis['strengths'] = identify_strengths(content, resume['target_job'])
+        analysis['areas_for_improvement'] = identify_improvements(content, resume['target_job'])
+        analysis['section_feedback'] = generate_section_feedback(sections)
+        analysis['recommendations'] = generate_recommendations(content, resume['target_job'])
         
         if job_description:
             analysis['ats'] = optimize_for_ats(content, job_description)
@@ -679,6 +688,285 @@ def analyze_resume(resume_id):
     conn.close()
     
     return render_template('analyze_resume.html', resume=resume, sections=sections, analysis=analysis)
+
+# Helper functions
+def check_readability(content):
+    # Simple readability check (can be enhanced with proper readability algorithms)
+    words = content.split()
+    if len(words) < 200:
+        return "Too short"
+    elif len(words) > 800:
+        return "Too long"
+    else:
+        return "Could be more readable"
+
+def count_action_verbs(content):
+    # Simple action verb counter (can be enhanced with a comprehensive list)
+    action_verbs = ["developed", "created", "managed", "led", "implemented", "designed", 
+                   "coordinated", "achieved", "improved", "reduced", "increased", "generated"]
+    count = 0
+    for verb in action_verbs:
+        count += content.lower().count(f" {verb} ")
+    return count
+
+def identify_strengths(content, target_job):
+    # Identify strengths based on content and target job
+    strengths = []
+    
+    # Technical skills check
+    tech_skills = ["python", "java", "javascript", "react", "node", "sql", "aws", "docker"]
+    for skill in tech_skills:
+        if skill in content.lower() and skill in target_job.lower():
+            strengths.append(f"Matching {skill.upper()} skills")
+    
+    # Experience check
+    experience_indicators = ["years of experience", "led team", "managed project"]
+    for indicator in experience_indicators:
+        if indicator in content.lower():
+            strengths.append("Demonstrated leadership experience")
+            break
+    
+    # If no strengths found
+    if not strengths:
+        strengths.append("Add more relevant skills and experience to highlight strengths")
+    
+    return strengths
+
+def identify_improvements(content, target_job):
+    # Identify areas for improvement
+    improvements = []
+    
+    # Length check
+    word_count = len(content.split())
+    if word_count < 300:
+        improvements.append("Resume is too short - add more relevant details")
+    elif word_count > 700:
+        improvements.append("Resume is too long - consider condensing")
+    
+    # Action verbs check
+    if count_action_verbs(content) < 8:
+        improvements.append("Use more action verbs to strengthen impact")
+    
+    # Keywords check
+    if target_job:
+        job_keywords = extract_keywords(target_job)
+        missing_keywords = [k for k in job_keywords if k not in content.lower()]
+        if missing_keywords:
+            improvements.append(f"Missing key terms: {', '.join(missing_keywords[:3])}")
+    
+    # If no improvements found
+    if not improvements:
+        improvements.append("Continue refining your resume for optimal impact")
+    
+    return improvements
+
+def extract_keywords(text):
+    # Simple keyword extractor (can be enhanced with NLP)
+    common_keywords = ["python", "java", "javascript", "agile", "scrum", "leadership", 
+                      "development", "software", "engineering", "team", "project"]
+    return [word for word in common_keywords if word in text.lower()]
+
+def generate_section_feedback(sections):
+    feedback = {}
+    for section in sections:
+        section_type = section['type'].lower() if 'type' in section else ''
+        section_content = section['content'] if 'content' in section else ''
+        
+        if section_type == 'experience':
+            feedback[section['id']] = {
+                'title': 'Experience Section',
+                'feedback': analyze_experience_section(section_content)
+            }
+        elif section_type == 'education':
+            feedback[section['id']] = {
+                'title': 'Education Section',
+                'feedback': analyze_education_section(section_content)
+            }
+        elif section_type == 'skills':
+            feedback[section['id']] = {
+                'title': 'Skills Section',
+                'feedback': analyze_skills_section(section_content)
+            }
+        else:
+            feedback[section['id']] = {
+                'title': section['title'] if 'title' in section else 'Section',
+                'feedback': "Consider organizing this section with bullet points for better readability"
+            }
+    
+    return feedback
+
+def analyze_experience_section(content):
+    # Analyze experience section
+    feedback = []
+    
+    if len(content.split()) < 100:
+        feedback.append("Add more details about your achievements and responsibilities")
+    
+    if content.count('•') < 3:
+        feedback.append("Use bullet points to highlight key achievements")
+    
+    if not any(month in content for month in ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]):
+        feedback.append("Include specific dates for each position")
+    
+    if not feedback:
+        feedback.append("Good job providing detailed experience information")
+    
+    return feedback
+
+def analyze_education_section(content):
+    # Analyze education section
+    feedback = []
+    
+    if "GPA" not in content:
+        feedback.append("Consider adding your GPA if it's above 3.0")
+    
+    if not any(year in content for year in ["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"]):
+        feedback.append("Include graduation years")
+    
+    if not feedback:
+        feedback.append("Education section looks comprehensive")
+    
+    return feedback
+
+def analyze_skills_section(content):
+    # Analyze skills section
+    feedback = []
+    
+    if len(content.split(',')) < 5 and len(content.split('•')) < 5:
+        feedback.append("List more relevant skills (aim for 8-12 key skills)")
+    
+    if not any(tech in content.lower() for tech in ["python", "java", "javascript", "react", "node", "sql"]):
+        feedback.append("Include more technical skills relevant to software engineering")
+    
+    if not feedback:
+        feedback.append("Skills section effectively highlights your capabilities")
+    
+    return feedback
+
+def generate_recommendations(content, target_job):
+    # Generate recommendations
+    recommendations = []
+    
+    # Length recommendations
+    word_count = len(content.split())
+    if word_count < 350:
+        recommendations.append("Expand your resume with more detailed achievements and responsibilities")
+    elif word_count > 700:
+        recommendations.append("Consider condensing your resume to focus on the most relevant experience")
+    
+    # ATS optimization
+    recommendations.append("Customize your resume keywords to match the specific job description")
+    
+    # Action verbs
+    if count_action_verbs(content) < 10:
+        recommendations.append("Strengthen impact by using more action verbs like 'developed', 'implemented', and 'achieved'")
+    
+    # Quantifiable achievements
+    if not any(char.isdigit() for char in content):
+        recommendations.append("Add quantifiable achievements (e.g., 'increased efficiency by 20%')")
+    
+    # Missing sections check
+    if "education" not in content.lower():
+        recommendations.append("Add an Education section with your degrees and relevant coursework")
+    
+    if "skills" not in content.lower():
+        recommendations.append("Include a dedicated Skills section highlighting technical and soft skills")
+    
+    return recommendations
+
+def score_resume(content, target_job):
+    # Calculate an overall score
+    score = 61  # Base score
+    
+    # Length adjustment
+    word_count = len(content.split())
+    if 350 <= word_count <= 700:
+        score += 10
+    elif word_count < 200 or word_count > 1000:
+        score -= 10
+    
+    # Action verbs adjustment
+    action_verb_count = count_action_verbs(content)
+    if action_verb_count >= 10:
+        score += 5
+    elif action_verb_count <= 5:
+        score -= 5
+    
+    # Keywords adjustment
+    if target_job:
+        keywords = extract_keywords(target_job)
+        matching_keywords = sum(1 for k in keywords if k in content.lower())
+        score += min(matching_keywords * 3, 15)
+    
+    # Quantifiable achievements
+    if sum(c.isdigit() for c in content) > 5:
+        score += 5
+    
+    # Bullet points
+    if content.count('•') >= 10:
+        score += 5
+    elif content.count('•') <= 3:
+        score -= 5
+    
+    # Cap the score
+    return max(0, min(score, 100))
+
+def optimize_for_ats(content, job_description):
+    # Simple ATS optimization suggestions
+    suggestions = []
+    
+    # Extract keywords from job description
+    job_keywords = extract_keywords(job_description)
+    job_keywords.extend([
+        "experience", "teamwork", "communication", "leadership", 
+        "project management", "software development", "problem-solving"
+    ])
+    
+    # Find missing keywords
+    missing_keywords = [k for k in job_keywords if k not in content.lower()]
+    
+    if missing_keywords:
+        suggestions.append(f"Add these keywords to improve ATS match: {', '.join(missing_keywords[:5])}")
+    
+    suggestions.append("Use standard section headings (Experience, Education, Skills)")
+    suggestions.append("Remove graphics, tables, and special characters that ATS might not parse correctly")
+    
+    return suggestions
+
+def check_grammar_formatting(content):
+    # Simple grammar and formatting checks
+    issues = []
+    
+    # Check for common grammar issues
+    grammar_checks = {
+        "i ": "Capitalize 'I'",
+        "  ": "Remove double spaces",
+        "!": "Avoid exclamation marks in professional documents",
+        "very ": "Use stronger words instead of 'very'"
+    }
+    
+    for pattern, suggestion in grammar_checks.items():
+        if pattern in content:
+            issues.append(suggestion)
+    
+    # Check for inconsistent spacing
+    if re.search(r'\n\n\n', content):
+        issues.append("Avoid excessive blank lines")
+    
+    # Check for consistent tense
+    past_tense = ["developed", "created", "managed", "led"]
+    present_tense = ["develop", "create", "manage", "lead"]
+    
+    past_count = sum(content.lower().count(word) for word in past_tense)
+    present_count = sum(content.lower().count(word) for word in present_tense)
+    
+    if past_count > 0 and present_count > 0:
+        issues.append("Use consistent verb tense throughout your resume")
+    
+    if not issues:
+        issues.append("No major grammar or formatting issues detected")
+    
+    return issues
 
 @app.route('/resume/<int:resume_id>/export', methods=['GET', 'POST'])
 @login_required
