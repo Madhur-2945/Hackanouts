@@ -1,0 +1,74 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Admin Dashboard</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <h3>{{ total_users }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Resumes</h5>
+                    <h3>{{ total_resumes }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Admins</h5>
+                    <h3>{{ total_admins }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="mt-4">Top Resume Templates</h3>
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Template Name</th>
+                <th>Usage Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for template in top_templates %}
+            <tr>
+                <td>{{ template[0] }}</td>
+                <td>{{ template[1] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3 class="mt-4">Common Resume Errors</h3>
+    <table class="table table-striped">
+        <thead class="table-danger">
+            <tr>
+                <th>Section Name</th>
+                <th>Occurrences</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for error in common_errors %}
+            <tr>
+                <td>{{ error[0] }}</td>
+                <td>{{ error[1] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

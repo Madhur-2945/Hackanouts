@@ -1,0 +1,79 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Admin - Credit Requests{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Pending Credit Requests</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Requested Credits</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in requests %}
+                    <tr>
+                        <td>{{ request.id }}</td>
+                        <td>{{ request.username }}</td>
+                        <td>{{ request.requested_credits }}</td>
+                        <td>
+                            <span class="badge bg-warning text-dark">{{ request.status }}</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('approve_credits', request_id=request.id, action='approve') }}" class="btn btn-success btn-sm">Approve</a>
+                            <a href="{{ url_for('approve_credits', request_id=request.id, action='reject') }}" class="btn btn-danger btn-sm">Reject</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <h3 class="mt-4">Admin Analytics</h3>
+    <div class="row mt-3">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Total Users</h5>
+                    <h3>{{ total_users }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Approved Credits</h5>
+                    <h3>{{ total_credits_approved }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5>Pending Requests</h5>
+                    <h3>{{ pending_requests }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>Admin Count</h5>
+                    <h3>{{ total_admins }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -79,6 +79,7 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('new_resume') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-group">
                         <label for="title">Resume Title</label>
                         <input type="text" class="form-control" id="title" name="title" required placeholder="e.g., Software Developer Resume, Marketing Professional Resume">

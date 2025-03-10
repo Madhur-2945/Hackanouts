@@ -1,2 +1,6 @@
 myenv/
 1/
+resume_builder.db
+admin_actions.log
+.env
+working-code-before-admin.txt
